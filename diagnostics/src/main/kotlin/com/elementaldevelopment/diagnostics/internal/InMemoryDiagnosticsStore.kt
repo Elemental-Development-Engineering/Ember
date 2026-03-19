@@ -19,6 +19,9 @@ import com.elementaldevelopment.diagnostics.storage.DiagnosticsStore
 internal class InMemoryDiagnosticsStore(
     private val maxCapacity: Int,
 ) : DiagnosticsStore {
+    init {
+        require(maxCapacity > 0) { "maxCapacity must be > 0" }
+    }
 
     private val lock = Any()
     private val buffer = ArrayDeque<DiagnosticEntry>(maxCapacity)

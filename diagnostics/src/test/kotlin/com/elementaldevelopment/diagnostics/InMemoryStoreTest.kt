@@ -4,6 +4,7 @@ import com.elementaldevelopment.diagnostics.internal.InMemoryDiagnosticsStore
 import com.elementaldevelopment.diagnostics.model.DiagnosticEntry
 import com.elementaldevelopment.diagnostics.model.DiagnosticLevel
 import com.google.common.truth.Truth.assertThat
+import org.junit.Assert.assertThrows
 import org.junit.Test
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -127,5 +128,14 @@ class InMemoryStoreTest {
         results.forEach { snapshot ->
             assertThat(snapshot).hasSize(50)
         }
+    }
+
+    @Test
+    fun `rejects non-positive capacity`() {
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            InMemoryDiagnosticsStore(0)
+        }
+
+        assertThat(error).hasMessageThat().contains("maxCapacity must be > 0")
     }
 }

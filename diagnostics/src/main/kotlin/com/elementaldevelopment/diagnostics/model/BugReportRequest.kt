@@ -15,4 +15,8 @@ data class BugReportRequest(
     val includeAppInfo: Boolean = true,
     val includeRecentLogs: Boolean = true,
     val maxEntries: Int = 50,
-)
+) {
+    init {
+        require(maxEntries >= 0) { "maxEntries must be >= 0" }
+    }
+}
