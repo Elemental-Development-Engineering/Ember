@@ -52,7 +52,10 @@ internal class BugReportStateHolder(
             state = state.copy(isLoading = true, errorMessage = null)
             val request = buildRequest()
             val report = diagnostics.reportBuilder.build(request)
-            val text = diagnostics.exporter.export(report)
+            val previewReport = report.copy(
+                userNote = state.userNote.takeIf { it.isNotBlank() },
+            )
+            val text = diagnostics.exporter.export(previewReport)
             state = state.copy(previewText = text, isLoading = false)
         } catch (e: Exception) {
             state = state.copy(

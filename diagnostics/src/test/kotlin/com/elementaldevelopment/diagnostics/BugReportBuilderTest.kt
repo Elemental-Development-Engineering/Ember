@@ -90,4 +90,19 @@ class BugReportBuilderTest {
             "[REDACTED] value",
         )
     }
+
+    @Test
+    fun `redacts user note before export`() {
+        val builder = DefaultBugReportBuilder(
+            metadataProvider = metadataProvider,
+            store = InMemoryDiagnosticsStore(10),
+            redactor = DiagnosticsRedactor { input ->
+                input.replace("SECRET", "[REDACTED]")
+            },
+        )
+
+        val report = builder.build(BugReportRequest(userNote = "Contains SECRET details"))
+
+        assertThat(report.userNote).isEqualTo("Contains [REDACTED] details")
+    }
 }

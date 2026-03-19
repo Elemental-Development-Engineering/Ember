@@ -146,4 +146,41 @@ class EndToEndRedactionTest {
         assertThat(exportedText).doesNotContain("private.md")
         assertThat(exportedText).doesNotContain("/storage/emulated/0")
     }
+
+    @Test
+    fun `sensitive content in user note is redacted in exported report`() {
+        val appRedactor = DiagnosticsRedactor { it.replace("SECRET", "[REDACTED]") }
+        val composedRedactor = ComposedRedactor(appRedactor)
+
+        val store = InMemoryDiagnosticsStore(100)
+        val entryFactory = EntryFactory(composedRedactor)
+        val logger = DefaultDiagnosticsLogger(entryFactory, store)
+
+        val metadataProvider = object : DiagnosticsMetadataProvider {
+            override fun collect() = DiagnosticsMetadata(
+                appName = "TestApp",
+                appId = "com.test.app",
+                versionName = "1.0.0",
+                versionCode = 1,
+                androidVersion = "15",
+                apiLevel = 35,
+                deviceManufacturer = "",
+                deviceModel = "",
+                generatedAt = System.currentTimeMillis(),
+                libraryVersion = "0.1.0",
+                sessionId = "test-session",
+            )
+        }
+
+        val reportBuilder = DefaultBugReportBuilder(metadataProvider, store, composedRedactor)
+        val exporter = PlainTextExporter()
+
+        logger.log("test", "entry")
+
+        val report = reportBuilder.build(BugReportRequest(userNote = "User typed SECRET value"))
+        val exportedText = exporter.export(report)
+
+        assertThat(exportedText).contains("[REDACTED]")
+        assertThat(exportedText).doesNotContain("SECRET")
+    }
 }

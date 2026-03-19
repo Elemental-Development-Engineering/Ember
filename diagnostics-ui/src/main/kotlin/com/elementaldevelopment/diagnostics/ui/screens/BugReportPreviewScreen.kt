@@ -75,6 +75,14 @@ fun BugReportPreviewScreen(
             maxLines = 4,
         )
 
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = "Your note is shown here exactly as typed. App redaction rules may sanitize it in the shared report.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
         Spacer(modifier = Modifier.height(16.dp))
 
         ToggleRow("Include app info", state.includeAppInfo) {
