@@ -145,4 +145,62 @@ class PlainTextExporterTest {
         val text = exporter.export(report)
         assertThat(text).doesNotContain("Device:")
     }
+
+    @Test
+    fun `omits app section when app info is empty`() {
+        val report = BugReport(
+            metadata = metadata().copy(
+                appName = "",
+                appId = "",
+                versionName = "",
+                versionCode = 0,
+            ),
+            entries = emptyList(),
+            userNote = null,
+            generatedAt = 1710864600000L,
+        )
+
+        val text = exporter.export(report)
+        assertThat(text).doesNotContain("\nApp\n")
+        assertThat(text).doesNotContain("App ID:")
+        assertThat(text).doesNotContain("- Version:")
+    }
+
+    @Test
+    fun `omits android line when os info is empty`() {
+        val report = BugReport(
+            metadata = metadata().copy(
+                androidVersion = "",
+                apiLevel = 0,
+            ),
+            entries = emptyList(),
+            userNote = null,
+            generatedAt = 1710864600000L,
+        )
+
+        val text = exporter.export(report)
+        assertThat(text).doesNotContain("Android:")
+        assertThat(text).contains("Session: test-session-123")
+    }
+
+    @Test
+    fun `keeps environment section for session context when device and os info are empty`() {
+        val report = BugReport(
+            metadata = metadata(
+                deviceManufacturer = "",
+                deviceModel = "",
+            ).copy(
+                androidVersion = "",
+                apiLevel = 0,
+            ),
+            entries = emptyList(),
+            userNote = null,
+            generatedAt = 1710864600000L,
+        )
+
+        val text = exporter.export(report)
+        assertThat(text).contains("\nEnvironment\n")
+        assertThat(text).contains("Time:")
+        assertThat(text).contains("Session: test-session-123")
+    }
 }

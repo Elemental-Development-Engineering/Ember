@@ -33,18 +33,35 @@ internal class PlainTextExporter : DiagnosticsExporter {
     }
 
     private fun appendAppSection(sb: StringBuilder, metadata: DiagnosticsMetadata) {
+        val hasAppName = metadata.appName.isNotBlank()
+        val hasAppId = metadata.appId.isNotBlank()
+        val hasVersion = metadata.versionName.isNotBlank() || metadata.versionCode != 0L
+
+        if (!hasAppName && !hasAppId && !hasVersion) return
+
         sb.appendLine()
         sb.appendLine("App")
-        sb.appendLine("- Name: ${metadata.appName}")
-        sb.appendLine("- App ID: ${metadata.appId}")
-        sb.appendLine("- Version: ${metadata.versionName} (${metadata.versionCode})")
+        if (hasAppName) {
+            sb.appendLine("- Name: ${metadata.appName}")
+        }
+        if (hasAppId) {
+            sb.appendLine("- App ID: ${metadata.appId}")
+        }
+        if (hasVersion) {
+            sb.appendLine("- Version: ${metadata.versionName} (${metadata.versionCode})")
+        }
     }
 
     private fun appendEnvironmentSection(sb: StringBuilder, metadata: DiagnosticsMetadata) {
         val hasDevice = metadata.deviceManufacturer.isNotEmpty() || metadata.deviceModel.isNotEmpty()
-        val hasOs = metadata.androidVersion.isNotEmpty()
+        val hasOs = metadata.androidVersion.isNotEmpty() && metadata.apiLevel > 0
+        val hasEnvironmentDetails = hasDevice ||
+            hasOs ||
+            metadata.additionalMetadata.isNotEmpty() ||
+            metadata.sessionId.isNotBlank() ||
+            metadata.generatedAt > 0L
 
-        if (!hasDevice && !hasOs) return
+        if (!hasEnvironmentDetails) return
 
         sb.appendLine()
         sb.appendLine("Environment")

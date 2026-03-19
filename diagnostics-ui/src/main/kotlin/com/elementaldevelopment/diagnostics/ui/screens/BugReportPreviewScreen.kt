@@ -77,6 +77,9 @@ fun BugReportPreviewScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        ToggleRow("Include app info", state.includeAppInfo) {
+            stateHolder.toggleAppInfo(it)
+        }
         ToggleRow("Include device info", state.includeDeviceInfo) {
             stateHolder.toggleDeviceInfo(it)
         }

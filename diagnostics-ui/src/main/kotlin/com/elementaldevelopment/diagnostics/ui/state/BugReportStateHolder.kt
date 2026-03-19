@@ -21,6 +21,11 @@ internal class BugReportStateHolder(
         refreshPreview()
     }
 
+    fun toggleAppInfo(include: Boolean) {
+        state = state.copy(includeAppInfo = include)
+        refreshPreview()
+    }
+
     fun toggleDeviceInfo(include: Boolean) {
         state = state.copy(includeDeviceInfo = include)
         refreshPreview()
@@ -59,6 +64,7 @@ internal class BugReportStateHolder(
 
     private fun buildRequest() = BugReportRequest(
         userNote = state.userNote.takeIf { it.isNotBlank() },
+        includeAppInfo = state.includeAppInfo,
         includeDeviceInfo = state.includeDeviceInfo,
         includeOsInfo = state.includeOsInfo,
         includeRecentLogs = state.includeRecentLogs,

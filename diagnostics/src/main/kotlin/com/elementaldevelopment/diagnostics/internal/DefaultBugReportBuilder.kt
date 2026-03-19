@@ -16,7 +16,7 @@ internal class DefaultBugReportBuilder(
 ) : BugReportBuilder {
 
     override fun build(request: BugReportRequest): BugReport {
-        val metadata = metadataProvider.collect()
+        val metadata = metadataProvider.collect().filtered(request)
 
         val entries = if (request.includeRecentLogs) {
             store.getRecent(request.maxEntries)
@@ -33,6 +33,21 @@ internal class DefaultBugReportBuilder(
             entries = entries,
             userNote = userNote,
             generatedAt = System.currentTimeMillis(),
+        )
+    }
+
+    private fun com.elementaldevelopment.diagnostics.model.DiagnosticsMetadata.filtered(
+        request: BugReportRequest,
+    ): com.elementaldevelopment.diagnostics.model.DiagnosticsMetadata {
+        return copy(
+            appName = appName.takeIf { request.includeAppInfo }.orEmpty(),
+            appId = appId.takeIf { request.includeAppInfo }.orEmpty(),
+            versionName = versionName.takeIf { request.includeAppInfo }.orEmpty(),
+            versionCode = versionCode.takeIf { request.includeAppInfo } ?: 0L,
+            androidVersion = androidVersion.takeIf { request.includeOsInfo }.orEmpty(),
+            apiLevel = apiLevel.takeIf { request.includeOsInfo } ?: 0,
+            deviceManufacturer = deviceManufacturer.takeIf { request.includeDeviceInfo }.orEmpty(),
+            deviceModel = deviceModel.takeIf { request.includeDeviceInfo }.orEmpty(),
         )
     }
 }

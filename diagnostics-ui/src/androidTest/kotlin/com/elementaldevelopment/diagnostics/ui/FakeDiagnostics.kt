@@ -34,14 +34,14 @@ internal class FakeReportBuilder : BugReportBuilder {
     override fun build(request: BugReportRequest): BugReport {
         return BugReport(
             metadata = DiagnosticsMetadata(
-                appName = "TestApp",
-                appId = "com.test.app",
-                versionName = "1.0.0",
-                versionCode = 1,
-                androidVersion = "15",
-                apiLevel = 35,
-                deviceManufacturer = "Google",
-                deviceModel = "Pixel 8",
+                appName = if (request.includeAppInfo) "TestApp" else "",
+                appId = if (request.includeAppInfo) "com.test.app" else "",
+                versionName = if (request.includeAppInfo) "1.0.0" else "",
+                versionCode = if (request.includeAppInfo) 1 else 0,
+                androidVersion = if (request.includeOsInfo) "15" else "",
+                apiLevel = if (request.includeOsInfo) 35 else 0,
+                deviceManufacturer = if (request.includeDeviceInfo) "Google" else "",
+                deviceModel = if (request.includeDeviceInfo) "Pixel 8" else "",
                 generatedAt = System.currentTimeMillis(),
                 libraryVersion = "0.1.0",
                 sessionId = "test-session",

@@ -53,6 +53,7 @@ class BugReportPreviewScreenTest {
             )
         }
 
+        composeTestRule.onNodeWithText("Include app info").assertIsDisplayed()
         composeTestRule.onNodeWithText("Include device info").assertIsDisplayed()
         composeTestRule.onNodeWithText("Include OS info").assertIsDisplayed()
         composeTestRule.onNodeWithText("Include recent logs").assertIsDisplayed()
