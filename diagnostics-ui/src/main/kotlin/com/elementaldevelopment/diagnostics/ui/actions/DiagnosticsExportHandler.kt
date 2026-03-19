@@ -1,9 +1,12 @@
 package com.elementaldevelopment.diagnostics.ui.actions
 
+import android.app.Activity
+import android.app.Application
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
 import com.elementaldevelopment.diagnostics.api.Diagnostics
 
 /**
@@ -17,6 +20,32 @@ class DiagnosticsExportHandler(
     private val context: Context,
     private val diagnostics: Diagnostics,
 ) {
+    private val application = context.applicationContext as? Application
+    private val deferredClearOnResume = DeferredClearOnResume {
+        diagnostics.logger.clear()
+    }
+    private var lifecycleCallbacksRegistered = false
+
+    private val lifecycleCallbacks = object : Application.ActivityLifecycleCallbacks {
+        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
+
+        override fun onActivityStarted(activity: Activity) = Unit
+
+        override fun onActivityResumed(activity: Activity) {
+            if (deferredClearOnResume.clearIfPending()) {
+                unregisterLifecycleCallbacks()
+            }
+        }
+
+        override fun onActivityPaused(activity: Activity) = Unit
+
+        override fun onActivityStopped(activity: Activity) = Unit
+
+        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
+
+        override fun onActivityDestroyed(activity: Activity) = Unit
+    }
+
     /**
      * Copies the report text to the clipboard and clears the diagnostics log.
      *
@@ -37,9 +66,9 @@ class DiagnosticsExportHandler(
     /**
      * Launches the Android sharesheet with the report text.
      *
-     * The diagnostics log is cleared after the share intent is launched.
-     * Note: Android's sharesheet does not provide a completion callback,
-     * so the log is cleared optimistically when the intent launches successfully.
+     * The diagnostics log is cleared when the app next resumes after the
+     * chooser is launched. This keeps the data around while the user is in
+     * the share flow, but still clears it as soon as they return to the app.
      */
     fun shareReport(reportText: String) {
         val sendIntent = Intent().apply {
@@ -57,7 +86,24 @@ class DiagnosticsExportHandler(
         val shareIntent = Intent.createChooser(sendIntent, "Share Bug Report")
         shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(shareIntent)
+        armDeferredClear()
+    }
 
-        diagnostics.logger.clear()
+    private fun armDeferredClear() {
+        val app = application ?: return
+
+        deferredClearOnResume.arm()
+        if (!lifecycleCallbacksRegistered) {
+            app.registerActivityLifecycleCallbacks(lifecycleCallbacks)
+            lifecycleCallbacksRegistered = true
+        }
+    }
+
+    private fun unregisterLifecycleCallbacks() {
+        val app = application ?: return
+        if (lifecycleCallbacksRegistered) {
+            app.unregisterActivityLifecycleCallbacks(lifecycleCallbacks)
+            lifecycleCallbacksRegistered = false
+        }
     }
 }
