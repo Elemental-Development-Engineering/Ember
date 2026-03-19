@@ -43,7 +43,7 @@ fun Diagnostics.Companion.create(
         config = config,
         sessionId = sessionId,
     )
-    val reportBuilder = DefaultBugReportBuilder(metadataProvider, store)
+    val reportBuilder = DefaultBugReportBuilder(metadataProvider, store, redactor)
     val exporter = PlainTextExporter()
 
     // Auto-log session start

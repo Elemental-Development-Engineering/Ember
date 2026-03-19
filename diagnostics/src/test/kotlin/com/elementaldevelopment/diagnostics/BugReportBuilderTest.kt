@@ -5,10 +5,13 @@ import com.elementaldevelopment.diagnostics.internal.InMemoryDiagnosticsStore
 import com.elementaldevelopment.diagnostics.metadata.DiagnosticsMetadataProvider
 import com.elementaldevelopment.diagnostics.model.BugReportRequest
 import com.elementaldevelopment.diagnostics.model.DiagnosticsMetadata
+import com.elementaldevelopment.diagnostics.redact.DiagnosticsRedactor
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class BugReportBuilderTest {
+
+    private val noOpRedactor = DiagnosticsRedactor { it }
 
     private val metadataProvider = object : DiagnosticsMetadataProvider {
         override fun collect() = DiagnosticsMetadata(
@@ -28,7 +31,11 @@ class BugReportBuilderTest {
 
     @Test
     fun `removes app info when excluded`() {
-        val builder = DefaultBugReportBuilder(metadataProvider, InMemoryDiagnosticsStore(10))
+        val builder = DefaultBugReportBuilder(
+            metadataProvider = metadataProvider,
+            store = InMemoryDiagnosticsStore(10),
+            redactor = noOpRedactor,
+        )
 
         val report = builder.build(BugReportRequest(includeAppInfo = false))
 
@@ -40,7 +47,11 @@ class BugReportBuilderTest {
 
     @Test
     fun `removes device and os info when excluded`() {
-        val builder = DefaultBugReportBuilder(metadataProvider, InMemoryDiagnosticsStore(10))
+        val builder = DefaultBugReportBuilder(
+            metadataProvider = metadataProvider,
+            store = InMemoryDiagnosticsStore(10),
+            redactor = noOpRedactor,
+        )
 
         val report = builder.build(
             BugReportRequest(
@@ -53,5 +64,30 @@ class BugReportBuilderTest {
         assertThat(report.metadata.deviceModel).isEmpty()
         assertThat(report.metadata.androidVersion).isEmpty()
         assertThat(report.metadata.apiLevel).isEqualTo(0)
+    }
+
+    @Test
+    fun `redacts additional metadata before export`() {
+        val builder = DefaultBugReportBuilder(
+            metadataProvider = object : DiagnosticsMetadataProvider {
+                override fun collect() = metadataProvider.collect().copy(
+                    additionalMetadata = mapOf(
+                        "auth token" to "SECRET value",
+                    ),
+                )
+            },
+            store = InMemoryDiagnosticsStore(10),
+            redactor = DiagnosticsRedactor { input ->
+                input.replace("SECRET", "[REDACTED]")
+                    .replace("token", "field")
+            },
+        )
+
+        val report = builder.build(BugReportRequest())
+
+        assertThat(report.metadata.additionalMetadata).containsExactly(
+            "auth field",
+            "[REDACTED] value",
+        )
     }
 }

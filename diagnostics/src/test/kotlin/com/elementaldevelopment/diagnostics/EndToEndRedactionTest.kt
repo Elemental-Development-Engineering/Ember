@@ -47,7 +47,7 @@ class EndToEndRedactionTest {
             )
         }
 
-        val reportBuilder = DefaultBugReportBuilder(metadataProvider, store)
+        val reportBuilder = DefaultBugReportBuilder(metadataProvider, store, composedRedactor)
         val exporter = PlainTextExporter()
 
         // 2. Log an entry containing "SECRET"
@@ -95,7 +95,7 @@ class EndToEndRedactionTest {
             )
         }
 
-        val reportBuilder = DefaultBugReportBuilder(metadataProvider, store)
+        val reportBuilder = DefaultBugReportBuilder(metadataProvider, store, composedRedactor)
         val exporter = PlainTextExporter()
 
         logger.logError("auth", "failed", RuntimeException("auth error: my-password invalid"))
@@ -134,7 +134,7 @@ class EndToEndRedactionTest {
             )
         }
 
-        val reportBuilder = DefaultBugReportBuilder(metadataProvider, store)
+        val reportBuilder = DefaultBugReportBuilder(metadataProvider, store, composedRedactor)
         val exporter = PlainTextExporter()
 
         logger.log("FileIO", "Opening /storage/emulated/0/Documents/private.md")

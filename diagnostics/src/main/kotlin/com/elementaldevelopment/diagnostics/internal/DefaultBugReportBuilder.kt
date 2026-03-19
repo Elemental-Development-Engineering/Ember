@@ -3,6 +3,7 @@ package com.elementaldevelopment.diagnostics.internal
 import com.elementaldevelopment.diagnostics.metadata.DiagnosticsMetadataProvider
 import com.elementaldevelopment.diagnostics.model.BugReport
 import com.elementaldevelopment.diagnostics.model.BugReportRequest
+import com.elementaldevelopment.diagnostics.redact.DiagnosticsRedactor
 import com.elementaldevelopment.diagnostics.report.BugReportBuilder
 import com.elementaldevelopment.diagnostics.storage.DiagnosticsStore
 
@@ -13,10 +14,13 @@ import com.elementaldevelopment.diagnostics.storage.DiagnosticsStore
 internal class DefaultBugReportBuilder(
     private val metadataProvider: DiagnosticsMetadataProvider,
     private val store: DiagnosticsStore,
+    private val redactor: DiagnosticsRedactor,
 ) : BugReportBuilder {
 
     override fun build(request: BugReportRequest): BugReport {
-        val metadata = metadataProvider.collect().filtered(request)
+        val metadata = metadataProvider.collect()
+            .redacted()
+            .filtered(request)
 
         val entries = if (request.includeRecentLogs) {
             store.getRecent(request.maxEntries)
@@ -48,6 +52,15 @@ internal class DefaultBugReportBuilder(
             apiLevel = apiLevel.takeIf { request.includeOsInfo } ?: 0,
             deviceManufacturer = deviceManufacturer.takeIf { request.includeDeviceInfo }.orEmpty(),
             deviceModel = deviceModel.takeIf { request.includeDeviceInfo }.orEmpty(),
+        )
+    }
+
+    private fun com.elementaldevelopment.diagnostics.model.DiagnosticsMetadata.redacted(
+    ): com.elementaldevelopment.diagnostics.model.DiagnosticsMetadata {
+        return copy(
+            additionalMetadata = additionalMetadata.entries.associate { (key, value) ->
+                redactor.redact(key) to redactor.redact(value)
+            },
         )
     }
 }
