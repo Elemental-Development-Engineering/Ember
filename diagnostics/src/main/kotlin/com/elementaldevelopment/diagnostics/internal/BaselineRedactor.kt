@@ -10,16 +10,10 @@ import com.elementaldevelopment.diagnostics.redact.DiagnosticsRedactor
 internal object BaselineRedactor : DiagnosticsRedactor {
 
     override fun redact(input: String): String {
-        return input
-            .collapseWhitespace()
-            .collapseNewlines()
+        return input.collapseWhitespace()
     }
 }
 
 private fun String.collapseWhitespace(): String {
     return replace(Regex("\\s+"), " ")
-}
-
-private fun String.collapseNewlines(): String {
-    return replace(Regex("[\\r\\n]+"), " ")
 }
