@@ -116,10 +116,12 @@ internal class PlainTextExporter : DiagnosticsExporter {
     }
 
     companion object {
+        private val timestampFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.US).apply {
+            timeZone = TimeZone.getDefault()
+        }
+
         private fun formatTimestamp(epochMillis: Long): String {
-            val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.US)
-            sdf.timeZone = TimeZone.getDefault()
-            return sdf.format(Date(epochMillis))
+            return timestampFormat.format(Date(epochMillis))
         }
     }
 }
