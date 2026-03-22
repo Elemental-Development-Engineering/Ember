@@ -17,10 +17,11 @@ import com.elementaldevelopment.diagnostics.api.Diagnostics
  * the log is not cleared.
  */
 class DiagnosticsExportHandler(
-    private val context: Context,
+    context: Context,
     private val diagnostics: Diagnostics,
 ) {
-    private val application = context.applicationContext as? Application
+    private val appContext: Context = context.applicationContext
+    private val application = appContext as? Application
     private val deferredClearOnResume = DeferredClearOnResume {
         diagnostics.logger.clear()
     }
@@ -53,7 +54,7 @@ class DiagnosticsExportHandler(
      */
     fun copyToClipboard(reportText: String): Boolean {
         return try {
-            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clipboard = appContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             val clip = ClipData.newPlainText("Bug Report", reportText)
             clipboard.setPrimaryClip(clip)
             diagnostics.logger.clear()
@@ -85,7 +86,7 @@ class DiagnosticsExportHandler(
 
         val shareIntent = Intent.createChooser(sendIntent, "Share Bug Report")
         shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(shareIntent)
+        appContext.startActivity(shareIntent)
         armDeferredClear()
     }
 
