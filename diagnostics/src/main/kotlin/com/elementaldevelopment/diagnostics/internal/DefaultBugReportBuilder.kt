@@ -29,7 +29,7 @@ internal class DefaultBugReportBuilder(
         }
 
         val userNote = request.userNote?.let {
-            redactor.redact(trimToMaxLength(it.trim(), Limits.MAX_USER_NOTE_LENGTH))
+            trimToMaxLength(redactor.redact(it.trim()), Limits.MAX_USER_NOTE_LENGTH)
         }
 
         return BugReport(

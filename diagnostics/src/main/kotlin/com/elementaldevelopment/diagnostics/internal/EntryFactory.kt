@@ -24,10 +24,8 @@ internal class EntryFactory(
         throwable: Throwable? = null,
         attributes: Map<String, String> = emptyMap(),
     ): DiagnosticEntry {
-        val trimmedTag = trimToMaxLength(tag, Limits.MAX_TAG_LENGTH)
-        val trimmedMessage = trimToMaxLength(message, Limits.MAX_MESSAGE_LENGTH)
-        val sanitizedMessage = redactor.redact(trimmedMessage)
-        val sanitizedTag = redactor.redact(trimmedTag)
+        val sanitizedTag = trimToMaxLength(redactor.redact(tag), Limits.MAX_TAG_LENGTH)
+        val sanitizedMessage = trimToMaxLength(redactor.redact(message), Limits.MAX_MESSAGE_LENGTH)
 
         val throwableSummary = throwable?.let {
             ThrowableSummarizer.summarize(it, redactor)
