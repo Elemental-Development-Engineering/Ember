@@ -17,12 +17,13 @@ import org.junit.Test
 class BugReportStateHolderTest {
 
     @Test
-    fun `preview keeps raw note while export uses redacted note`() {
+    fun `preview and export both use redacted note`() {
         val stateHolder = BugReportStateHolder(RedactingNoteDiagnostics())
 
         stateHolder.updateUserNote("User typed SECRET value")
 
-        assertThat(stateHolder.state.previewText).contains("User typed SECRET value")
+        assertThat(stateHolder.state.previewText).contains("User typed [REDACTED] value")
+        assertThat(stateHolder.state.previewText).doesNotContain("User typed SECRET value")
         assertThat(stateHolder.getExportText()).contains("User typed [REDACTED] value")
         assertThat(stateHolder.getExportText()).doesNotContain("User typed SECRET value")
     }

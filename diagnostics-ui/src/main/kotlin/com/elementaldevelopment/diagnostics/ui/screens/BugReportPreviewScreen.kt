@@ -78,7 +78,7 @@ fun BugReportPreviewScreen(
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
-            text = "Your note is shown here exactly as typed. App redaction rules may sanitize it in the shared report.",
+            text = "The preview below shows the report as it will be shared, with any redaction rules applied.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
