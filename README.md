@@ -29,6 +29,61 @@ dependencies {
 }
 ```
 
+## Testing Locally In Another App
+
+For day-to-day local testing against a real app before publishing, prefer a composite build.
+It gives you the fastest edit-sync-debug loop and does not require publishing artifacts first.
+
+In the consuming app's `settings.gradle.kts`:
+
+```kotlin
+includeBuild("../elemental-ember") {
+    dependencySubstitution {
+        substitute(module("com.elementaldevelopment:diagnostics"))
+            .using(project(":diagnostics"))
+        substitute(module("com.elementaldevelopment:diagnostics-ui"))
+            .using(project(":diagnostics-ui"))
+    }
+}
+```
+
+Then in the consuming app module:
+
+```kotlin
+dependencies {
+    implementation("com.elementaldevelopment:diagnostics:0.1.0")
+    implementation("com.elementaldevelopment:diagnostics-ui:0.1.0") // optional
+}
+```
+
+If you want to test the exact artifact-based install flow before publishing to a remote Maven repository,
+you can also publish locally to `mavenLocal()` from this repo:
+
+```bash
+./gradlew publishLibrariesToMavenLocal
+```
+
+Then add `mavenLocal()` ahead of `mavenCentral()` in the consuming app's repository list:
+
+```kotlin
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenLocal()
+        mavenCentral()
+    }
+}
+```
+
+And consume the same coordinates:
+
+```kotlin
+dependencies {
+    implementation("com.elementaldevelopment:diagnostics:0.1.0")
+    implementation("com.elementaldevelopment:diagnostics-ui:0.1.0") // optional
+}
+```
+
 ## Initialization
 
 Initialize diagnostics once during app startup:

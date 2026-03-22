@@ -1,7 +1,10 @@
+import org.gradle.api.publish.maven.MavenPublication
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
+    `maven-publish`
 }
 
 android {
@@ -26,10 +29,16 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
 }
 
 dependencies {
-    implementation(project(":diagnostics"))
+    api(project(":diagnostics"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
@@ -46,4 +55,29 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.truth)
+}
+
+publishing {
+    publications {
+        register<MavenPublication>("release") {
+            groupId = project.group.toString()
+            artifactId = "diagnostics-ui"
+            version = project.version.toString()
+
+            pom {
+                name.set("Elemental Ember Diagnostics UI")
+                description.set("Jetpack Compose UI components for Elemental Ember diagnostics flows.")
+            }
+        }
+    }
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            named<MavenPublication>("release") {
+                from(components["release"])
+            }
+        }
+    }
 }

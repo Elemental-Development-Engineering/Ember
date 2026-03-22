@@ -1,6 +1,9 @@
+import org.gradle.api.publish.maven.MavenPublication
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    `maven-publish`
 }
 
 android {
@@ -21,6 +24,12 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
 }
 
 dependencies {
@@ -28,4 +37,29 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.truth)
+}
+
+publishing {
+    publications {
+        register<MavenPublication>("release") {
+            groupId = project.group.toString()
+            artifactId = "diagnostics"
+            version = project.version.toString()
+
+            pom {
+                name.set("Elemental Ember Diagnostics")
+                description.set("Core diagnostics library for privacy-first Android bug reporting.")
+            }
+        }
+    }
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            named<MavenPublication>("release") {
+                from(components["release"])
+            }
+        }
+    }
 }
