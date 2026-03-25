@@ -29,6 +29,12 @@ android {
         jvmTarget = "11"
     }
 
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
+
     publishing {
         singleVariant("release") {
             withSourcesJar()
@@ -41,6 +47,7 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.truth)
+    testImplementation(libs.robolectric)
 }
 
 publishing {

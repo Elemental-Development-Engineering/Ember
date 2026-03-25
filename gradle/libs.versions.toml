@@ -10,6 +10,7 @@ truthVersion = "1.4.4"
 androidxTestRunner = "1.6.2"
 androidxTestRules = "1.6.1"
 composeUiTestJunit4 = "1.7.6"
+robolectric = "4.14.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version = "1.15.0" }
@@ -24,6 +25,7 @@ compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4
 compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 junit = { group = "junit", name = "junit", version.ref = "junitVersion" }
 truth = { group = "com.google.truth", name = "truth", version.ref = "truthVersion" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidxTestRunner" }
 androidx-test-rules = { group = "androidx.test", name = "rules", version.ref = "androidxTestRules" }
 
