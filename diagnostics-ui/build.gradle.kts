@@ -7,6 +7,10 @@ plugins {
     `maven-publish`
 }
 
+val javadocJar by tasks.registering(Jar::class) {
+    archiveClassifier.set("javadoc")
+}
+
 android {
     namespace = "com.elementaldevelopment.diagnostics.ui"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -63,6 +67,8 @@ publishing {
             groupId = project.group.toString()
             artifactId = "diagnostics-ui"
             version = project.version.toString()
+
+            artifact(javadocJar)
 
             pom {
                 name.set("Elemental Ember Diagnostics UI")
