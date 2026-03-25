@@ -249,3 +249,16 @@ Before release, verify:
 - [ ] All implementation classes marked `internal`
 - [ ] Report preview works before export
 - [ ] Logs clear automatically after successful export
+
+---
+
+<p align="center">
+  <a href="https://www.elementaldevelopmenteng.com">
+    <img src="assets/elemental_development_logo.png" alt="Elemental Development logo" width="48">
+  </a>
+</p>
+<p align="center">
+  <strong>Elemental Development</strong><br>
+  <em>Privacy-focused software, thoughtfully built.</em><br>
+  <a href="https://www.elementaldevelopmenteng.com">elementaldevelopmenteng.com</a>
+</p>
