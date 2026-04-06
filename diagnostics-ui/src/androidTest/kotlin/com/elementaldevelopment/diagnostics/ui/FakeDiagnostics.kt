@@ -45,7 +45,7 @@ internal class FakeReportBuilder : BugReportBuilder {
                 deviceManufacturer = if (request.includeDeviceInfo) "Google" else "",
                 deviceModel = if (request.includeDeviceInfo) "Pixel 8" else "",
                 generatedAt = System.currentTimeMillis(),
-                libraryVersion = "0.1.0",
+                libraryVersion = "0.2.0",
                 sessionId = "test-session",
                 previousSessionOutcome = PreviousSessionOutcome.UNEXPECTED_TERMINATION,
             ),
@@ -82,7 +82,7 @@ internal class FakeExporter : DiagnosticsExporter {
         return buildString {
             appendLine("Elemental Diagnostics Report")
             appendLine("Format Version: 2")
-            appendLine("Library Version: 0.1.0")
+            appendLine("Library Version: 0.2.0")
             appendLine()
             appendLine("App")
             appendLine("- Name: ${report.metadata.appName}")

@@ -79,7 +79,7 @@ private class RedactingNoteDiagnostics : Diagnostics {
                     deviceManufacturer = "Google",
                     deviceModel = "Pixel 8",
                     generatedAt = 0L,
-                    libraryVersion = "0.1.0",
+                    libraryVersion = "0.2.0",
                     sessionId = "test-session",
                     previousSessionOutcome = PreviousSessionOutcome.UNEXPECTED_TERMINATION,
                 ),

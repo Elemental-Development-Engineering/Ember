@@ -28,7 +28,7 @@ class BugReportBuilderTest {
             deviceManufacturer = "Google",
             deviceModel = "Pixel 8",
             generatedAt = 1710864600000L,
-            libraryVersion = "0.1.0",
+            libraryVersion = "0.2.0",
             sessionId = "test-session-123",
         )
     }

@@ -96,7 +96,7 @@ class DiagnosticsExportHandlerTest {
                     androidVersion = "", apiLevel = 0,
                     deviceManufacturer = "", deviceModel = "",
                     generatedAt = System.currentTimeMillis(),
-                    libraryVersion = "0.1.0", sessionId = "test",
+                    libraryVersion = "0.2.0", sessionId = "test",
                 ),
                 entries = emptyList(),
                 userNote = null,

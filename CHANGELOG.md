@@ -4,7 +4,7 @@ All notable changes to Elemental Ember will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [0.2.0] - 2026-04-06
 
 ### Added
 - Opt-in crash diagnostics persistence with local file-backed recovery between launches
@@ -55,3 +55,4 @@ Initial release of Elemental Ember — a privacy-first, offline-first diagnostic
 - Logs cleared after successful export
 
 [0.1.0]: https://github.com/Elemental-Development-Engineering/Ember/releases/tag/v0.1.0
+[0.2.0]: https://github.com/Elemental-Development-Engineering/Ember/releases/tag/v0.2.0

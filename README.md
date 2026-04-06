@@ -51,8 +51,8 @@ Then in the consuming app module:
 
 ```kotlin
 dependencies {
-    implementation("com.elementaldevelopment:diagnostics:0.1.0")
-    implementation("com.elementaldevelopment:diagnostics-ui:0.1.0") // optional
+    implementation("com.elementaldevelopment:diagnostics:0.2.0")
+    implementation("com.elementaldevelopment:diagnostics-ui:0.2.0") // optional
 }
 ```
 
@@ -79,8 +79,8 @@ And consume the same coordinates:
 
 ```kotlin
 dependencies {
-    implementation("com.elementaldevelopment:diagnostics:0.1.0")
-    implementation("com.elementaldevelopment:diagnostics-ui:0.1.0") // optional
+    implementation("com.elementaldevelopment:diagnostics:0.2.0")
+    implementation("com.elementaldevelopment:diagnostics-ui:0.2.0") // optional
 }
 ```
 
@@ -218,7 +218,7 @@ Reports are plain text with a stable layout:
 ```text
 Elemental Diagnostics Report
 Format Version: 2
-Library Version: 0.1.0
+Library Version: 0.2.0
 
 App
 - Name: MyApp

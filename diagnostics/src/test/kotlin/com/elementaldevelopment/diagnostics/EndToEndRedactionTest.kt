@@ -42,7 +42,7 @@ class EndToEndRedactionTest {
                 deviceManufacturer = "Google",
                 deviceModel = "Pixel 8",
                 generatedAt = System.currentTimeMillis(),
-                libraryVersion = "0.1.0",
+                libraryVersion = "0.2.0",
                 sessionId = "test-session",
             )
         }
@@ -90,7 +90,7 @@ class EndToEndRedactionTest {
                 deviceManufacturer = "",
                 deviceModel = "",
                 generatedAt = System.currentTimeMillis(),
-                libraryVersion = "0.1.0",
+                libraryVersion = "0.2.0",
                 sessionId = "test-session",
             )
         }
@@ -129,7 +129,7 @@ class EndToEndRedactionTest {
                 deviceManufacturer = "",
                 deviceModel = "",
                 generatedAt = System.currentTimeMillis(),
-                libraryVersion = "0.1.0",
+                libraryVersion = "0.2.0",
                 sessionId = "test-session",
             )
         }
@@ -167,7 +167,7 @@ class EndToEndRedactionTest {
                 deviceManufacturer = "",
                 deviceModel = "",
                 generatedAt = System.currentTimeMillis(),
-                libraryVersion = "0.1.0",
+                libraryVersion = "0.2.0",
                 sessionId = "test-session",
             )
         }

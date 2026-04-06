@@ -7,7 +7,7 @@ plugins {
 
 allprojects {
     group = providers.gradleProperty("GROUP").orElse("com.elementaldevelopment").get()
-    version = providers.gradleProperty("VERSION_NAME").orElse("0.1.0").get()
+    version = providers.gradleProperty("VERSION_NAME").orElse("0.2.0").get()
 }
 
 subprojects {

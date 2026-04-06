@@ -26,7 +26,7 @@ class PlainTextExporterTest {
         deviceManufacturer = deviceManufacturer,
         deviceModel = deviceModel,
         generatedAt = 1710864600000L,
-        libraryVersion = "0.1.0",
+        libraryVersion = "0.2.0",
         sessionId = "test-session-123",
     )
 
@@ -51,7 +51,7 @@ class PlainTextExporterTest {
 
         assertThat(text).contains("Elemental Diagnostics Report")
         assertThat(text).contains("Format Version: 2")
-        assertThat(text).contains("Library Version: 0.1.0")
+        assertThat(text).contains("Library Version: 0.2.0")
         assertThat(text).contains("Name: TestApp")
         assertThat(text).contains("App ID: com.test.app")
         assertThat(text).contains("Version: 1.0.0 (1)")
