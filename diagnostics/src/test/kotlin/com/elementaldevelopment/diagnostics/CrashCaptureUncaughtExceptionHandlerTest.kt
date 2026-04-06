@@ -17,6 +17,7 @@ class CrashCaptureUncaughtExceptionHandlerTest {
         val repository = RecordingRecoveredDiagnosticsRepository()
         val delegated = mutableListOf<Throwable>()
         val handler = CrashCaptureUncaughtExceptionHandler(
+            appId = "com.test.app",
             entryFactory = EntryFactory(DiagnosticsRedactor { input ->
                 input.replace("SECRET", "[REDACTED]")
             }),

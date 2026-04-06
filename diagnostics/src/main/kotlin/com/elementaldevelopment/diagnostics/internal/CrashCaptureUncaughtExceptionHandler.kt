@@ -7,9 +7,10 @@ import com.elementaldevelopment.diagnostics.model.DiagnosticLevel
  * original uncaught exception handler.
  */
 internal class CrashCaptureUncaughtExceptionHandler(
+    internal val appId: String,
     private val entryFactory: EntryFactory,
     private val recoveredDiagnosticsRepository: RecoveredDiagnosticsRepository,
-    private val delegate: Thread.UncaughtExceptionHandler?,
+    internal val delegate: Thread.UncaughtExceptionHandler?,
 ) : Thread.UncaughtExceptionHandler {
 
     override fun uncaughtException(thread: Thread, throwable: Throwable) {

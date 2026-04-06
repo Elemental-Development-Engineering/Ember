@@ -176,6 +176,34 @@ class DiagnosticsFactoryTest {
     }
 
     @Test
+    fun `repeated initialization replaces ember handler instead of nesting delegates`() {
+        val recoveryConfig = object : DiagnosticsConfig by testConfig {
+            override val appId = "com.test.app.repeat"
+            override val crashPersistence = CrashPersistenceConfig.Enabled(
+                maxPersistedEntries = 10,
+                retentionAfterRecoveryMillis = 60_000L,
+            )
+        }
+        clearPersistenceFile(recoveryConfig.appId)
+
+        val sentinelHandler = Thread.UncaughtExceptionHandler { _, _ -> Unit }
+        Thread.setDefaultUncaughtExceptionHandler(sentinelHandler)
+
+        createDiagnostics(config = recoveryConfig)
+        val firstHandler = Thread.getDefaultUncaughtExceptionHandler()
+        assertThat(firstHandler).isInstanceOf(CrashCaptureUncaughtExceptionHandler::class.java)
+        assertThat((firstHandler as CrashCaptureUncaughtExceptionHandler).delegate)
+            .isSameInstanceAs(sentinelHandler)
+
+        createDiagnostics(config = recoveryConfig)
+        val secondHandler = Thread.getDefaultUncaughtExceptionHandler()
+        assertThat(secondHandler).isInstanceOf(CrashCaptureUncaughtExceptionHandler::class.java)
+        assertThat(secondHandler).isNotSameInstanceAs(firstHandler)
+        assertThat((secondHandler as CrashCaptureUncaughtExceptionHandler).delegate)
+            .isSameInstanceAs(sentinelHandler)
+    }
+
+    @Test
     fun `uncaught exception is recovered as previous crash on next startup`() {
         val recoveryConfig = object : DiagnosticsConfig by testConfig {
             override val appId = "com.test.app.uncaught"

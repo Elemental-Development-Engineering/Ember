@@ -10,7 +10,7 @@ import com.elementaldevelopment.diagnostics.internal.DefaultBugReportBuilder
 import com.elementaldevelopment.diagnostics.internal.DefaultDiagnostics
 import com.elementaldevelopment.diagnostics.internal.DefaultDiagnosticsLogger
 import com.elementaldevelopment.diagnostics.internal.DefaultMetadataProvider
-import com.elementaldevelopment.diagnostics.internal.DiagnosticsSessionLifecycleCallbacks
+import com.elementaldevelopment.diagnostics.internal.DiagnosticsRuntimeInstaller
 import com.elementaldevelopment.diagnostics.internal.EntryFactory
 import com.elementaldevelopment.diagnostics.internal.FileBackedCrashStore
 import com.elementaldevelopment.diagnostics.internal.InMemoryDiagnosticsStore
@@ -69,18 +69,18 @@ fun Diagnostics.Companion.create(
 
     (context.applicationContext as? android.app.Application)?.let { application ->
         persistentCrashStore?.let { recoveredRepository ->
-            application.registerActivityLifecycleCallbacks(
-                DiagnosticsSessionLifecycleCallbacks(recoveredRepository)
+            DiagnosticsRuntimeInstaller.registerOrReplaceLifecycleCallbacks(
+                application = application,
+                appId = config.appId,
+                recoveredRepository = recoveredRepository,
             )
         }
     }
     persistentCrashStore?.let { recoveredRepository ->
-        Thread.setDefaultUncaughtExceptionHandler(
-            CrashCaptureUncaughtExceptionHandler(
-                entryFactory = entryFactory,
-                recoveredDiagnosticsRepository = recoveredRepository,
-                delegate = Thread.getDefaultUncaughtExceptionHandler(),
-            )
+        DiagnosticsRuntimeInstaller.installOrReplaceUncaughtExceptionHandler(
+            appId = config.appId,
+            entryFactory = entryFactory,
+            recoveredRepository = recoveredRepository,
         )
     }
 
