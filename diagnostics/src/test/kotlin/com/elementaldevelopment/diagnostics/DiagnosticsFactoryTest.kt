@@ -5,11 +5,13 @@ import com.elementaldevelopment.diagnostics.config.CrashPersistenceConfig
 import com.elementaldevelopment.diagnostics.api.Diagnostics
 import com.elementaldevelopment.diagnostics.api.create
 import com.elementaldevelopment.diagnostics.config.DiagnosticsConfig
+import com.elementaldevelopment.diagnostics.internal.CrashCaptureUncaughtExceptionHandler
 import com.elementaldevelopment.diagnostics.model.DiagnosticLevel
 import com.elementaldevelopment.diagnostics.model.PreviousSessionOutcome
 import com.elementaldevelopment.diagnostics.redact.DiagnosticsRedactor
 import com.google.common.truth.Truth.assertThat
 import java.io.File
+import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -17,6 +19,7 @@ import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class DiagnosticsFactoryTest {
+    private val originalUncaughtExceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
 
     private val testConfig = object : DiagnosticsConfig {
         override val appName = "TestApp"
@@ -33,6 +36,11 @@ class DiagnosticsFactoryTest {
         context: Context = RuntimeEnvironment.getApplication(),
         config: DiagnosticsConfig = testConfig,
     ): Diagnostics = Diagnostics.create(context, config)
+
+    @After
+    fun tearDown() {
+        Thread.setDefaultUncaughtExceptionHandler(originalUncaughtExceptionHandler)
+    }
 
     @Test
     fun `returns a non-null Diagnostics instance`() {
@@ -142,6 +150,64 @@ class DiagnosticsFactoryTest {
         assertThat(report.recoveredEntries).isNotEmpty()
         assertThat(report.recoveredEntries.map { it.message }).contains("before restart")
         assertThat(report.entries.map { it.message }).contains("Diagnostics initialized")
+    }
+
+    @Test
+    fun `installs uncaught exception handler only when crash persistence is enabled`() {
+        val sentinelHandler = Thread.UncaughtExceptionHandler { _, _ -> Unit }
+        Thread.setDefaultUncaughtExceptionHandler(sentinelHandler)
+
+        createDiagnostics()
+        assertThat(Thread.getDefaultUncaughtExceptionHandler()).isSameInstanceAs(sentinelHandler)
+
+        val recoveryConfig = object : DiagnosticsConfig by testConfig {
+            override val appId = "com.test.app.handler"
+            override val crashPersistence = CrashPersistenceConfig.Enabled(
+                maxPersistedEntries = 10,
+                retentionAfterRecoveryMillis = 60_000L,
+            )
+        }
+        clearPersistenceFile(recoveryConfig.appId)
+
+        createDiagnostics(config = recoveryConfig)
+
+        assertThat(Thread.getDefaultUncaughtExceptionHandler())
+            .isInstanceOf(CrashCaptureUncaughtExceptionHandler::class.java)
+    }
+
+    @Test
+    fun `uncaught exception is recovered as previous crash on next startup`() {
+        val recoveryConfig = object : DiagnosticsConfig by testConfig {
+            override val appId = "com.test.app.uncaught"
+            override val crashPersistence = CrashPersistenceConfig.Enabled(
+                maxPersistedEntries = 10,
+                retentionAfterRecoveryMillis = 60_000L,
+            )
+        }
+        clearPersistenceFile(recoveryConfig.appId)
+
+        val sentinelHandler = Thread.UncaughtExceptionHandler { _, _ -> Unit }
+        Thread.setDefaultUncaughtExceptionHandler(sentinelHandler)
+
+        createDiagnostics(config = recoveryConfig)
+        val installedHandler = Thread.getDefaultUncaughtExceptionHandler()
+        assertThat(installedHandler).isInstanceOf(CrashCaptureUncaughtExceptionHandler::class.java)
+
+        checkNotNull(installedHandler).uncaughtException(
+            Thread.currentThread(),
+            IllegalStateException("boom"),
+        )
+
+        val recovered = createDiagnostics(config = recoveryConfig)
+        val report = recovered.reportBuilder.build(
+            com.elementaldevelopment.diagnostics.model.BugReportRequest()
+        )
+
+        assertThat(report.metadata.previousSessionOutcome)
+            .isEqualTo(PreviousSessionOutcome.UNCUGHT_EXCEPTION)
+        assertThat(report.recoveredEntries.map { it.tag }).contains("Crash")
+        assertThat(report.recoveredEntries.mapNotNull { it.throwableSummary })
+            .contains("IllegalStateException: boom")
     }
 
     private fun clearPersistenceFile(appId: String) {

@@ -4,6 +4,7 @@ import android.content.Context
 import com.elementaldevelopment.diagnostics.config.CrashPersistenceConfig
 import com.elementaldevelopment.diagnostics.config.DiagnosticsConfig
 import com.elementaldevelopment.diagnostics.internal.CompositeDiagnosticsStore
+import com.elementaldevelopment.diagnostics.internal.CrashCaptureUncaughtExceptionHandler
 import com.elementaldevelopment.diagnostics.internal.ComposedRedactor
 import com.elementaldevelopment.diagnostics.internal.DefaultBugReportBuilder
 import com.elementaldevelopment.diagnostics.internal.DefaultDiagnostics
@@ -72,6 +73,15 @@ fun Diagnostics.Companion.create(
                 DiagnosticsSessionLifecycleCallbacks(recoveredRepository)
             )
         }
+    }
+    persistentCrashStore?.let { recoveredRepository ->
+        Thread.setDefaultUncaughtExceptionHandler(
+            CrashCaptureUncaughtExceptionHandler(
+                entryFactory = entryFactory,
+                recoveredDiagnosticsRepository = recoveredRepository,
+                delegate = Thread.getDefaultUncaughtExceptionHandler(),
+            )
+        )
     }
 
     // Auto-log session start

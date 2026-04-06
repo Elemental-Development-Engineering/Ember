@@ -173,6 +173,8 @@ private class FakeRecoveredDiagnosticsRepository(
 
     override fun markCleanExit(endedAt: Long) = Unit
 
+    override fun markUncaughtException(endedAt: Long) = Unit
+
     override fun getRecoveredEntries(limit: Int?): List<DiagnosticEntry> {
         return if (limit != null) entries.takeLast(limit) else entries
     }

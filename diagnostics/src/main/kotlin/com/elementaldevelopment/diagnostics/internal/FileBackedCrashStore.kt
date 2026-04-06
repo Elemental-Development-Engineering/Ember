@@ -95,6 +95,19 @@ internal class FileBackedCrashStore(
         )
     }
 
+    override fun markUncaughtException(endedAt: Long) = synchronized(lock) {
+        val snapshot = readSnapshot()
+        val activeSession = snapshot.activeSession ?: return
+        writeSnapshot(
+            snapshot.copy(
+                activeSession = activeSession.copy(
+                    outcome = PersistedSessionOutcome.UNCUGHT_EXCEPTION,
+                    endedAt = endedAt,
+                )
+            )
+        )
+    }
+
     override fun getRecoveredEntries(limit: Int?): List<DiagnosticEntry> = synchronized(lock) {
         val snapshot = readSnapshot()
         val now = System.currentTimeMillis()

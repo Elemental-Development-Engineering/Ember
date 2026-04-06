@@ -15,6 +15,7 @@ internal interface RecoveredDiagnosticsRepository {
     fun appendToActiveSession(entry: DiagnosticEntry)
     fun markSessionOpen()
     fun markCleanExit(endedAt: Long)
+    fun markUncaughtException(endedAt: Long)
     fun getRecoveredEntries(limit: Int? = null): List<DiagnosticEntry>
     fun clearAll()
 }
