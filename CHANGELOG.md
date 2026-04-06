@@ -4,6 +4,21 @@ All notable changes to Elemental Ember will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+- Opt-in crash diagnostics persistence with local file-backed recovery between launches
+- Recovered-diagnostics support in bug reports and plain-text export
+- Previous-session outcome metadata for recovered reports
+
+### Changed
+- Plain-text report format version advanced from 1 to 2
+- `DiagnosticsLogger.clear()` now clears both in-memory current-session entries and recovered persisted diagnostics
+
+### Privacy
+- Crash persistence remains local-only and redacted-before-write
+- Recovered diagnostics are never exported automatically
+
 ## [0.1.0] - 2026-03-24
 
 Initial release of Elemental Ember — a privacy-first, offline-first diagnostics library for Android.

@@ -96,6 +96,7 @@ val diagnostics = Diagnostics.create(
 ```
 
 A session-start entry is automatically logged, and an ephemeral session ID is generated for the current app process.
+If crash persistence is enabled, Ember can also recover redacted diagnostics from the previous unexpected termination and include them in the next bug report preview.
 
 ## Configuration
 
@@ -107,6 +108,9 @@ class MyAppConfig : DiagnosticsConfig {
     override val appId = "com.example.myapp"
     override val supportEmail = "support@example.com"
     override val maxStoredEntries = 300
+    override val crashPersistence = CrashPersistenceConfig.Enabled(
+        maxPersistedEntries = 300,
+    )
     override val includeDeviceModelByDefault = true
     override val includeOsVersionByDefault = true
 
@@ -117,6 +121,13 @@ class MyAppConfig : DiagnosticsConfig {
     override fun additionalMetadata(): Map<String, String> = emptyMap()
 }
 ```
+
+Crash persistence is optional and local-only:
+
+- persisted entries are still redacted before writing to disk
+- recovery data lives in app-private storage
+- recovered diagnostics are shown in the next report preview instead of being exported automatically
+- `DiagnosticsLogger.clear()` clears both current and recovered local diagnostics
 
 ## Logging
 
@@ -135,6 +146,31 @@ diagnostics.logger.runCatchingLogged("Timer", "schedule") {
     scheduleNotification()
 }
 ```
+
+## Crash Persistence
+
+Enable crash persistence when you want the next launch to recover recent diagnostics from the previous unexpected termination:
+
+```kotlin
+import com.elementaldevelopment.diagnostics.config.CrashPersistenceConfig
+
+override val crashPersistence = CrashPersistenceConfig.Enabled(
+    maxPersistedEntries = 300,
+    retentionAfterRecoveryMillis = 7L * 24 * 60 * 60 * 1000,
+    includeRecoveredEntriesByDefault = true,
+)
+```
+
+What phase 1 covers:
+
+- recovered diagnostics after an unexpected termination
+- report metadata that identifies the previous session outcome
+- a separate recovered-diagnostics section in exported text
+
+What phase 1 does not cover yet:
+
+- a dedicated uncaught-exception hook
+- a final crash entry written at the exact throw site
 
 ## Bug Report Preview Integration
 
@@ -181,7 +217,7 @@ Reports are plain text with a stable layout:
 
 ```text
 Elemental Diagnostics Report
-Format Version: 1
+Format Version: 2
 Library Version: 0.1.0
 
 App
@@ -194,6 +230,8 @@ Environment
 - Device: Google Pixel 8
 - Time: 2026-03-19T17:10:00-07:00
 - Session: a1b2c3d4-...
+- Previous Session: unexpected termination
+- Previous Session ID: z9y8x7w6-...
 
 User Note
 App freezes when opening a large file.
@@ -203,6 +241,10 @@ Recent Diagnostics
 [2026-03-19T17:08:16-07:00] INFO Parser: parse started
 [2026-03-19T17:08:18-07:00] ERROR Parser: OutOfMemoryError while rendering
   Exception: OutOfMemoryError: Java heap space
+
+Recovered Diagnostics From Previous Launch
+[2026-03-19T17:07:59-07:00] INFO Parser: parse started
+[2026-03-19T17:08:00-07:00] WARN Renderer: frame budget exceeded
 ```
 
 ## Testing
@@ -221,7 +263,6 @@ Run UI tests (requires emulator or device):
 
 These are explicitly out of scope for v1:
 
-- No persistent storage (in-memory ring buffer only)
 - No coroutines in the core module
 - No automatic remote crash reporting
 - No full stack traces by default
@@ -249,6 +290,7 @@ Before release, verify:
 - [ ] All implementation classes marked `internal`
 - [ ] Report preview works before export
 - [ ] Logs clear automatically after successful export
+- [ ] Crash persistence remains opt-in and local-only
 
 ---
 
