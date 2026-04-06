@@ -19,5 +19,8 @@ data class DiagnosticsMetadata(
     val generatedAt: Long,
     val libraryVersion: String,
     val sessionId: String,
+    val previousSessionOutcome: PreviousSessionOutcome = PreviousSessionOutcome.NONE,
+    val previousSessionId: String? = null,
+    val previousSessionTimestamp: Long? = null,
     val additionalMetadata: Map<String, String> = emptyMap(),
 )

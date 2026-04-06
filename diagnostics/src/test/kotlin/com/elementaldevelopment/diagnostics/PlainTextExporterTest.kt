@@ -5,6 +5,7 @@ import com.elementaldevelopment.diagnostics.model.BugReport
 import com.elementaldevelopment.diagnostics.model.DiagnosticEntry
 import com.elementaldevelopment.diagnostics.model.DiagnosticLevel
 import com.elementaldevelopment.diagnostics.model.DiagnosticsMetadata
+import com.elementaldevelopment.diagnostics.model.PreviousSessionOutcome
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -49,7 +50,7 @@ class PlainTextExporterTest {
         val text = exporter.export(report)
 
         assertThat(text).contains("Elemental Diagnostics Report")
-        assertThat(text).contains("Format Version: 1")
+        assertThat(text).contains("Format Version: 2")
         assertThat(text).contains("Library Version: 0.1.0")
         assertThat(text).contains("Name: TestApp")
         assertThat(text).contains("App ID: com.test.app")
@@ -61,6 +62,36 @@ class PlainTextExporterTest {
         assertThat(text).contains("App freezes on large files")
         assertThat(text).contains("Recent Diagnostics")
         assertThat(text).contains("INFO Parser: parse started")
+    }
+
+    @Test
+    fun `exports recovered diagnostics section when present`() {
+        val report = BugReport(
+            metadata = metadata().copy(
+                previousSessionOutcome = PreviousSessionOutcome.UNEXPECTED_TERMINATION,
+                previousSessionId = "previous-session",
+                previousSessionTimestamp = 1710864550000L,
+            ),
+            entries = emptyList(),
+            recoveredEntries = listOf(
+                DiagnosticEntry(
+                    id = 2,
+                    timestamp = 1710864500000L,
+                    level = DiagnosticLevel.ERROR,
+                    tag = "Crash",
+                    message = "Recovered from previous launch",
+                ),
+            ),
+            userNote = null,
+            generatedAt = 1710864600000L,
+        )
+
+        val text = exporter.export(report)
+
+        assertThat(text).contains("Previous Session: unexpected termination")
+        assertThat(text).contains("Previous Session ID: previous-session")
+        assertThat(text).contains("Recovered Diagnostics From Previous Launch")
+        assertThat(text).contains("ERROR Crash: Recovered from previous launch")
     }
 
     @Test

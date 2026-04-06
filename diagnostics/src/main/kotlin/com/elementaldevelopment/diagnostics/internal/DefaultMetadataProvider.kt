@@ -22,6 +22,7 @@ internal class DefaultMetadataProvider(
     private val context: Context,
     private val config: DiagnosticsConfig,
     private val sessionId: String,
+    private val recoveryState: RecoveryState = RecoveryState(),
 ) : DiagnosticsMetadataProvider {
 
     override fun collect(): DiagnosticsMetadata {
@@ -51,6 +52,9 @@ internal class DefaultMetadataProvider(
             generatedAt = System.currentTimeMillis(),
             libraryVersion = EmberVersion.VERSION,
             sessionId = sessionId,
+            previousSessionOutcome = recoveryState.previousSessionOutcome,
+            previousSessionId = recoveryState.previousSessionId,
+            previousSessionTimestamp = recoveryState.previousSessionTimestamp,
             additionalMetadata = config.additionalMetadata(),
         )
     }

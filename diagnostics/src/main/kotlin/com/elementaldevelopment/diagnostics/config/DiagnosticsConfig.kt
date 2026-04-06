@@ -18,6 +18,8 @@ interface DiagnosticsConfig {
     val appId: String
     val supportEmail: String?
     val maxStoredEntries: Int
+    val crashPersistence: CrashPersistenceConfig
+        get() = CrashPersistenceConfig.Disabled
     val includeDeviceModelByDefault: Boolean
     val includeOsVersionByDefault: Boolean
     val redactor: DiagnosticsRedactor

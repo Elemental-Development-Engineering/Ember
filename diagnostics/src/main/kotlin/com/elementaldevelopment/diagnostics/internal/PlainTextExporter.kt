@@ -4,6 +4,7 @@ import com.elementaldevelopment.diagnostics.export.DiagnosticsExporter
 import com.elementaldevelopment.diagnostics.model.BugReport
 import com.elementaldevelopment.diagnostics.model.DiagnosticEntry
 import com.elementaldevelopment.diagnostics.model.DiagnosticsMetadata
+import com.elementaldevelopment.diagnostics.model.PreviousSessionOutcome
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -28,6 +29,7 @@ internal class PlainTextExporter : DiagnosticsExporter {
         appendEnvironmentSection(sb, report.metadata)
         appendUserNoteSection(sb, report.userNote)
         appendEntriesSection(sb, report.entries)
+        appendRecoveredEntriesSection(sb, report.recoveredEntries)
 
         return sb.toString().trimEnd()
     }
@@ -77,6 +79,15 @@ internal class PlainTextExporter : DiagnosticsExporter {
         }
         sb.appendLine("- Time: ${formatTimestamp(metadata.generatedAt)}")
         sb.appendLine("- Session: ${metadata.sessionId}")
+        if (metadata.previousSessionOutcome != PreviousSessionOutcome.NONE) {
+            sb.appendLine("- Previous Session: ${metadata.previousSessionOutcome.toDisplayName()}")
+            metadata.previousSessionId?.let { previousSessionId ->
+                sb.appendLine("- Previous Session ID: $previousSessionId")
+            }
+            metadata.previousSessionTimestamp?.let { previousTimestamp ->
+                sb.appendLine("- Previous Session Time: ${formatTimestamp(previousTimestamp)}")
+            }
+        }
 
         if (metadata.additionalMetadata.isNotEmpty()) {
             metadata.additionalMetadata.forEach { (key, value) ->
@@ -98,6 +109,18 @@ internal class PlainTextExporter : DiagnosticsExporter {
 
         sb.appendLine()
         sb.appendLine("Recent Diagnostics")
+        appendEntryLines(sb, entries)
+    }
+
+    private fun appendRecoveredEntriesSection(sb: StringBuilder, entries: List<DiagnosticEntry>) {
+        if (entries.isEmpty()) return
+
+        sb.appendLine()
+        sb.appendLine("Recovered Diagnostics From Previous Launch")
+        appendEntryLines(sb, entries)
+    }
+
+    private fun appendEntryLines(sb: StringBuilder, entries: List<DiagnosticEntry>) {
         entries.forEach { entry ->
             val timestamp = formatTimestamp(entry.timestamp)
             val line = "[$timestamp] ${entry.level} ${entry.tag}: ${entry.message}"
@@ -123,5 +146,13 @@ internal class PlainTextExporter : DiagnosticsExporter {
         private fun formatTimestamp(epochMillis: Long): String {
             return timestampFormat.format(Date(epochMillis))
         }
+    }
+}
+
+private fun PreviousSessionOutcome.toDisplayName(): String {
+    return when (this) {
+        PreviousSessionOutcome.NONE -> "none"
+        PreviousSessionOutcome.UNCUGHT_EXCEPTION -> "uncaught exception"
+        PreviousSessionOutcome.UNEXPECTED_TERMINATION -> "unexpected termination"
     }
 }

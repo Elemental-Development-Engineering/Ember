@@ -10,7 +10,8 @@ package com.elementaldevelopment.diagnostics.model
 data class BugReport(
     val metadata: DiagnosticsMetadata,
     val entries: List<DiagnosticEntry>,
+    val recoveredEntries: List<DiagnosticEntry> = emptyList(),
     val userNote: String?,
     val generatedAt: Long,
-    val formatVersion: String = "1",
+    val formatVersion: String = "2",
 )

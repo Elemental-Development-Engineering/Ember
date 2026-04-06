@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.elementaldevelopment.diagnostics.api.Diagnostics
+import com.elementaldevelopment.diagnostics.config.CrashPersistenceConfig
 import com.elementaldevelopment.diagnostics.model.BugReportRequest
 
 internal class BugReportStateHolder(
@@ -68,5 +69,9 @@ internal class BugReportStateHolder(
         includeDeviceInfo = state.includeDeviceInfo,
         includeOsInfo = state.includeOsInfo,
         includeRecentLogs = state.includeRecentLogs,
+        includeRecoveredLogs = when (val crashPersistence = diagnostics.config.crashPersistence) {
+            CrashPersistenceConfig.Disabled -> false
+            is CrashPersistenceConfig.Enabled -> crashPersistence.includeRecoveredEntriesByDefault
+        },
     )
 }

@@ -2,8 +2,12 @@ package com.elementaldevelopment.diagnostics
 
 import com.elementaldevelopment.diagnostics.internal.DefaultBugReportBuilder
 import com.elementaldevelopment.diagnostics.internal.InMemoryDiagnosticsStore
+import com.elementaldevelopment.diagnostics.internal.RecoveredDiagnosticsRepository
+import com.elementaldevelopment.diagnostics.internal.RecoveryState
 import com.elementaldevelopment.diagnostics.metadata.DiagnosticsMetadataProvider
 import com.elementaldevelopment.diagnostics.model.BugReportRequest
+import com.elementaldevelopment.diagnostics.model.DiagnosticEntry
+import com.elementaldevelopment.diagnostics.model.DiagnosticLevel
 import com.elementaldevelopment.diagnostics.model.DiagnosticsMetadata
 import com.elementaldevelopment.diagnostics.redact.DiagnosticsRedactor
 import com.google.common.truth.Truth.assertThat
@@ -105,4 +109,73 @@ class BugReportBuilderTest {
 
         assertThat(report.userNote).isEqualTo("Contains [REDACTED] details")
     }
+
+    @Test
+    fun `includes recovered entries when requested`() {
+        val builder = DefaultBugReportBuilder(
+            metadataProvider = metadataProvider,
+            store = InMemoryDiagnosticsStore(10),
+            redactor = noOpRedactor,
+            recoveredDiagnosticsRepository = FakeRecoveredDiagnosticsRepository(
+                entries = listOf(
+                    DiagnosticEntry(
+                        id = 42,
+                        timestamp = 1710864500000L,
+                        level = DiagnosticLevel.ERROR,
+                        tag = "Crash",
+                        message = "Recovered from disk",
+                    ),
+                ),
+            ),
+        )
+
+        val report = builder.build(BugReportRequest(includeRecoveredLogs = true))
+
+        assertThat(report.recoveredEntries).hasSize(1)
+        assertThat(report.recoveredEntries.single().message).isEqualTo("Recovered from disk")
+    }
+
+    @Test
+    fun `omits recovered entries when excluded`() {
+        val builder = DefaultBugReportBuilder(
+            metadataProvider = metadataProvider,
+            store = InMemoryDiagnosticsStore(10),
+            redactor = noOpRedactor,
+            recoveredDiagnosticsRepository = FakeRecoveredDiagnosticsRepository(
+                entries = listOf(
+                    DiagnosticEntry(
+                        id = 42,
+                        timestamp = 1710864500000L,
+                        level = DiagnosticLevel.ERROR,
+                        tag = "Crash",
+                        message = "Recovered from disk",
+                    ),
+                ),
+            ),
+        )
+
+        val report = builder.build(BugReportRequest(includeRecoveredLogs = false))
+
+        assertThat(report.recoveredEntries).isEmpty()
+    }
+}
+
+private class FakeRecoveredDiagnosticsRepository(
+    private val entries: List<DiagnosticEntry>,
+) : RecoveredDiagnosticsRepository {
+    override fun recoverAndStartNewSession(sessionId: String, startedAt: Long): RecoveryState {
+        return RecoveryState()
+    }
+
+    override fun appendToActiveSession(entry: DiagnosticEntry) = Unit
+
+    override fun markSessionOpen() = Unit
+
+    override fun markCleanExit(endedAt: Long) = Unit
+
+    override fun getRecoveredEntries(limit: Int?): List<DiagnosticEntry> {
+        return if (limit != null) entries.takeLast(limit) else entries
+    }
+
+    override fun clearAll() = Unit
 }

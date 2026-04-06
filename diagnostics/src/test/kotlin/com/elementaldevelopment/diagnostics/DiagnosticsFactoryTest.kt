@@ -1,12 +1,15 @@
 package com.elementaldevelopment.diagnostics
 
 import android.content.Context
+import com.elementaldevelopment.diagnostics.config.CrashPersistenceConfig
 import com.elementaldevelopment.diagnostics.api.Diagnostics
 import com.elementaldevelopment.diagnostics.api.create
 import com.elementaldevelopment.diagnostics.config.DiagnosticsConfig
 import com.elementaldevelopment.diagnostics.model.DiagnosticLevel
+import com.elementaldevelopment.diagnostics.model.PreviousSessionOutcome
 import com.elementaldevelopment.diagnostics.redact.DiagnosticsRedactor
 import com.google.common.truth.Truth.assertThat
+import java.io.File
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -113,5 +116,40 @@ class DiagnosticsFactoryTest {
         )
 
         assertThat(report1.metadata.sessionId).isNotEqualTo(report2.metadata.sessionId)
+    }
+
+    @Test
+    fun `recovers previous active session entries when crash persistence is enabled`() {
+        val recoveryConfig = object : DiagnosticsConfig by testConfig {
+            override val appId = "com.test.app.persistence"
+            override val crashPersistence = CrashPersistenceConfig.Enabled(
+                maxPersistedEntries = 10,
+                retentionAfterRecoveryMillis = 60_000L,
+            )
+        }
+        clearPersistenceFile(recoveryConfig.appId)
+
+        val first = createDiagnostics(config = recoveryConfig)
+        first.logger.log("Parser", "before restart")
+
+        val second = createDiagnostics(config = recoveryConfig)
+        val report = second.reportBuilder.build(
+            com.elementaldevelopment.diagnostics.model.BugReportRequest()
+        )
+
+        assertThat(report.metadata.previousSessionOutcome)
+            .isEqualTo(PreviousSessionOutcome.UNEXPECTED_TERMINATION)
+        assertThat(report.recoveredEntries).isNotEmpty()
+        assertThat(report.recoveredEntries.map { it.message }).contains("before restart")
+        assertThat(report.entries.map { it.message }).contains("Diagnostics initialized")
+    }
+
+    private fun clearPersistenceFile(appId: String) {
+        val context: Context = RuntimeEnvironment.getApplication()
+        val sanitizedAppId = appId.replace(Regex("[^A-Za-z0-9._-]"), "_")
+        val file = File(File(context.filesDir, "ember"), "${sanitizedAppId}_diagnostics_snapshot.json")
+        if (file.exists()) {
+            file.delete()
+        }
     }
 }

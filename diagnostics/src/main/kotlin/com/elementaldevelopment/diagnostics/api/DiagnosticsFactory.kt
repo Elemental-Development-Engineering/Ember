@@ -1,15 +1,20 @@
 package com.elementaldevelopment.diagnostics.api
 
 import android.content.Context
+import com.elementaldevelopment.diagnostics.config.CrashPersistenceConfig
 import com.elementaldevelopment.diagnostics.config.DiagnosticsConfig
+import com.elementaldevelopment.diagnostics.internal.CompositeDiagnosticsStore
 import com.elementaldevelopment.diagnostics.internal.ComposedRedactor
 import com.elementaldevelopment.diagnostics.internal.DefaultBugReportBuilder
 import com.elementaldevelopment.diagnostics.internal.DefaultDiagnostics
 import com.elementaldevelopment.diagnostics.internal.DefaultDiagnosticsLogger
 import com.elementaldevelopment.diagnostics.internal.DefaultMetadataProvider
+import com.elementaldevelopment.diagnostics.internal.DiagnosticsSessionLifecycleCallbacks
 import com.elementaldevelopment.diagnostics.internal.EntryFactory
+import com.elementaldevelopment.diagnostics.internal.FileBackedCrashStore
 import com.elementaldevelopment.diagnostics.internal.InMemoryDiagnosticsStore
 import com.elementaldevelopment.diagnostics.internal.PlainTextExporter
+import com.elementaldevelopment.diagnostics.internal.RecoveryState
 import com.elementaldevelopment.diagnostics.model.DiagnosticLevel
 import java.util.UUID
 
@@ -34,17 +39,40 @@ fun Diagnostics.Companion.create(
     config: DiagnosticsConfig,
 ): Diagnostics {
     val sessionId = UUID.randomUUID().toString()
+    val startedAt = System.currentTimeMillis()
     val redactor = ComposedRedactor(config.redactor)
     val entryFactory = EntryFactory(redactor)
-    val store = InMemoryDiagnosticsStore(config.maxStoredEntries)
+    val memoryStore = InMemoryDiagnosticsStore(config.maxStoredEntries)
+    val persistentCrashStore = when (val crashPersistence = config.crashPersistence) {
+        CrashPersistenceConfig.Disabled -> null
+        is CrashPersistenceConfig.Enabled -> FileBackedCrashStore(
+            context = context.applicationContext,
+            appId = config.appId,
+            maxPersistedEntries = crashPersistence.maxPersistedEntries,
+            retentionAfterRecoveryMillis = crashPersistence.retentionAfterRecoveryMillis,
+        )
+    }
+    val recoveryState = persistentCrashStore?.recoverAndStartNewSession(sessionId, startedAt) ?: RecoveryState()
+    val store = persistentCrashStore?.let {
+        CompositeDiagnosticsStore(memoryStore, it)
+    } ?: memoryStore
     val logger = DefaultDiagnosticsLogger(entryFactory, store)
     val metadataProvider = DefaultMetadataProvider(
         context = context.applicationContext,
         config = config,
         sessionId = sessionId,
+        recoveryState = recoveryState,
     )
-    val reportBuilder = DefaultBugReportBuilder(metadataProvider, store, redactor)
+    val reportBuilder = DefaultBugReportBuilder(metadataProvider, store, redactor, persistentCrashStore)
     val exporter = PlainTextExporter()
+
+    (context.applicationContext as? android.app.Application)?.let { application ->
+        persistentCrashStore?.let { recoveredRepository ->
+            application.registerActivityLifecycleCallbacks(
+                DiagnosticsSessionLifecycleCallbacks(recoveredRepository)
+            )
+        }
+    }
 
     // Auto-log session start
     logger.log(DiagnosticLevel.INFO, "System", "Diagnostics initialized")

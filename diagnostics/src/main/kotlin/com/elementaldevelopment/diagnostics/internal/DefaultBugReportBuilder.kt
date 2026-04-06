@@ -15,6 +15,7 @@ internal class DefaultBugReportBuilder(
     private val metadataProvider: DiagnosticsMetadataProvider,
     private val store: DiagnosticsStore,
     private val redactor: DiagnosticsRedactor,
+    private val recoveredDiagnosticsRepository: RecoveredDiagnosticsRepository? = null,
 ) : BugReportBuilder {
 
     override fun build(request: BugReportRequest): BugReport {
@@ -28,6 +29,12 @@ internal class DefaultBugReportBuilder(
             emptyList()
         }
 
+        val recoveredEntries = if (request.includeRecoveredLogs) {
+            recoveredDiagnosticsRepository?.getRecoveredEntries(request.maxRecoveredEntries).orEmpty()
+        } else {
+            emptyList()
+        }
+
         val userNote = request.userNote?.let {
             trimToMaxLength(redactor.redact(it.trim()), Limits.MAX_USER_NOTE_LENGTH)
         }
@@ -35,6 +42,7 @@ internal class DefaultBugReportBuilder(
         return BugReport(
             metadata = metadata,
             entries = entries,
+            recoveredEntries = recoveredEntries,
             userNote = userNote,
             generatedAt = System.currentTimeMillis(),
         )
