@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - Opt-in crash diagnostics persistence with local file-backed recovery between launches
 - Recovered-diagnostics support in bug reports and plain-text export
 - Previous-session outcome metadata for recovered reports
+- Uncaught-exception capture that persists one final sanitized crash entry before delegating to the platform handler
 
 ### Changed
 - Plain-text report format version advanced from 1 to 2

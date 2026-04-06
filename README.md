@@ -167,10 +167,10 @@ What phase 1 covers:
 - report metadata that identifies the previous session outcome
 - a separate recovered-diagnostics section in exported text
 
-What phase 1 does not cover yet:
+Phase 2 adds:
 
 - a dedicated uncaught-exception hook
-- a final crash entry written at the exact throw site
+- a final sanitized crash entry persisted before delegating to the platform handler
 
 ## Bug Report Preview Integration
 
