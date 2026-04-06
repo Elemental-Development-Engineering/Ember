@@ -10,7 +10,16 @@ import com.elementaldevelopment.diagnostics.model.BugReportRequest
 internal class BugReportStateHolder(
     private val diagnostics: Diagnostics,
 ) {
-    var state by mutableStateOf(BugReportUiState())
+    private val defaultIncludeRecoveredLogs = when (val crashPersistence = diagnostics.config.crashPersistence) {
+        CrashPersistenceConfig.Disabled -> false
+        is CrashPersistenceConfig.Enabled -> crashPersistence.includeRecoveredEntriesByDefault
+    }
+
+    var state by mutableStateOf(
+        BugReportUiState(
+            includeRecoveredLogs = defaultIncludeRecoveredLogs,
+        )
+    )
         private set
 
     init {
@@ -42,6 +51,11 @@ internal class BugReportStateHolder(
         refreshPreview()
     }
 
+    fun toggleRecoveredLogs(include: Boolean) {
+        state = state.copy(includeRecoveredLogs = include)
+        refreshPreview()
+    }
+
     fun getExportText(): String {
         val request = buildRequest()
         val report = diagnostics.reportBuilder.build(request)
@@ -54,7 +68,13 @@ internal class BugReportStateHolder(
             val request = buildRequest()
             val report = diagnostics.reportBuilder.build(request)
             val text = diagnostics.exporter.export(report)
-            state = state.copy(previewText = text, isLoading = false)
+            state = state.copy(
+                previewText = text,
+                hasRecoveredDiagnostics = report.metadata.previousSessionOutcome !=
+                    com.elementaldevelopment.diagnostics.model.PreviousSessionOutcome.NONE,
+                previousSessionOutcome = report.metadata.previousSessionOutcome,
+                isLoading = false,
+            )
         } catch (e: Exception) {
             state = state.copy(
                 errorMessage = "Failed to generate report preview",
@@ -69,9 +89,6 @@ internal class BugReportStateHolder(
         includeDeviceInfo = state.includeDeviceInfo,
         includeOsInfo = state.includeOsInfo,
         includeRecentLogs = state.includeRecentLogs,
-        includeRecoveredLogs = when (val crashPersistence = diagnostics.config.crashPersistence) {
-            CrashPersistenceConfig.Disabled -> false
-            is CrashPersistenceConfig.Enabled -> crashPersistence.includeRecoveredEntriesByDefault
-        },
+        includeRecoveredLogs = state.includeRecoveredLogs,
     )
 }

@@ -1,6 +1,7 @@
 package com.elementaldevelopment.diagnostics.ui
 
 import com.elementaldevelopment.diagnostics.api.Diagnostics
+import com.elementaldevelopment.diagnostics.config.CrashPersistenceConfig
 import com.elementaldevelopment.diagnostics.config.DiagnosticsConfig
 import com.elementaldevelopment.diagnostics.export.DiagnosticsExporter
 import com.elementaldevelopment.diagnostics.logging.DiagnosticsLogger
@@ -9,6 +10,7 @@ import com.elementaldevelopment.diagnostics.model.BugReportRequest
 import com.elementaldevelopment.diagnostics.model.DiagnosticEntry
 import com.elementaldevelopment.diagnostics.model.DiagnosticLevel
 import com.elementaldevelopment.diagnostics.model.DiagnosticsMetadata
+import com.elementaldevelopment.diagnostics.model.PreviousSessionOutcome
 import com.elementaldevelopment.diagnostics.redact.DiagnosticsRedactor
 import com.elementaldevelopment.diagnostics.report.BugReportBuilder
 
@@ -45,6 +47,7 @@ internal class FakeReportBuilder : BugReportBuilder {
                 generatedAt = System.currentTimeMillis(),
                 libraryVersion = "0.1.0",
                 sessionId = "test-session",
+                previousSessionOutcome = PreviousSessionOutcome.UNEXPECTED_TERMINATION,
             ),
             entries = listOf(
                 DiagnosticEntry(
@@ -55,6 +58,19 @@ internal class FakeReportBuilder : BugReportBuilder {
                     message = "Diagnostics initialized",
                 ),
             ),
+            recoveredEntries = if (request.includeRecoveredLogs) {
+                listOf(
+                    DiagnosticEntry(
+                        id = 2,
+                        timestamp = System.currentTimeMillis(),
+                        level = DiagnosticLevel.ERROR,
+                        tag = "Crash",
+                        message = "Recovered from previous launch",
+                    ),
+                )
+            } else {
+                emptyList()
+            },
             userNote = request.userNote,
             generatedAt = System.currentTimeMillis(),
         )
@@ -65,7 +81,7 @@ internal class FakeExporter : DiagnosticsExporter {
     override fun export(report: BugReport): String {
         return buildString {
             appendLine("Elemental Diagnostics Report")
-            appendLine("Format Version: 1")
+            appendLine("Format Version: 2")
             appendLine("Library Version: 0.1.0")
             appendLine()
             appendLine("App")
@@ -80,6 +96,13 @@ internal class FakeExporter : DiagnosticsExporter {
             report.entries.forEach { entry ->
                 appendLine("[test] ${entry.level} ${entry.tag}: ${entry.message}")
             }
+            if (report.recoveredEntries.isNotEmpty()) {
+                appendLine()
+                appendLine("Recovered Diagnostics From Previous Launch")
+                report.recoveredEntries.forEach { entry ->
+                    appendLine("[test] ${entry.level} ${entry.tag}: ${entry.message}")
+                }
+            }
         }.trimEnd()
     }
 }
@@ -89,6 +112,10 @@ internal class FakeConfig : DiagnosticsConfig {
     override val appId = "com.test.app"
     override val supportEmail = "test@example.com"
     override val maxStoredEntries = 100
+    override val crashPersistence = CrashPersistenceConfig.Enabled(
+        maxPersistedEntries = 100,
+        includeRecoveredEntriesByDefault = true,
+    )
     override val includeDeviceModelByDefault = true
     override val includeOsVersionByDefault = true
     override val redactor = DiagnosticsRedactor { it }

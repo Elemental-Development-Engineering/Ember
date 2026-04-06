@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.elementaldevelopment.diagnostics.api.Diagnostics
+import com.elementaldevelopment.diagnostics.model.PreviousSessionOutcome
 import com.elementaldevelopment.diagnostics.ui.state.BugReportStateHolder
 
 /**
@@ -85,6 +86,30 @@ fun BugReportPreviewScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        if (state.hasRecoveredDiagnostics) {
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        text = "Recovered Diagnostics Available",
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = recoveredDiagnosticsMessage(state.previousSessionOutcome),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
         ToggleRow("Include app info", state.includeAppInfo) {
             stateHolder.toggleAppInfo(it)
         }
@@ -96,6 +121,11 @@ fun BugReportPreviewScreen(
         }
         ToggleRow("Include recent logs", state.includeRecentLogs) {
             stateHolder.toggleRecentLogs(it)
+        }
+        if (state.hasRecoveredDiagnostics) {
+            ToggleRow("Include recovered diagnostics", state.includeRecoveredLogs) {
+                stateHolder.toggleRecoveredLogs(it)
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -146,6 +176,17 @@ fun BugReportPreviewScreen(
                 Text("Share")
             }
         }
+    }
+}
+
+private fun recoveredDiagnosticsMessage(previousSessionOutcome: PreviousSessionOutcome): String {
+    return when (previousSessionOutcome) {
+        PreviousSessionOutcome.NONE ->
+            "Recovered diagnostics from the previous launch can be reviewed before sharing."
+        PreviousSessionOutcome.UNCUGHT_EXCEPTION ->
+            "The previous app session ended with an uncaught exception. You can include those recovered diagnostics in this report."
+        PreviousSessionOutcome.UNEXPECTED_TERMINATION ->
+            "The previous app session appears to have ended unexpectedly. You can include those recovered diagnostics in this report."
     }
 }
 

@@ -2,6 +2,7 @@ package com.elementaldevelopment.diagnostics.ui
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -57,6 +58,7 @@ class BugReportPreviewScreenTest {
         composeTestRule.onNodeWithText("Include device info").assertIsDisplayed()
         composeTestRule.onNodeWithText("Include OS info").assertIsDisplayed()
         composeTestRule.onNodeWithText("Include recent logs").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Include recovered diagnostics").assertIsDisplayed()
     }
 
     @Test
@@ -129,5 +131,34 @@ class BugReportPreviewScreenTest {
         }
 
         composeTestRule.onNodeWithText("Add a note (optional)").assertIsDisplayed()
+    }
+
+    @Test
+    fun displaysRecoveredDiagnosticsMessage() {
+        composeTestRule.setContent {
+            BugReportPreviewScreen(
+                diagnostics = FakeDiagnostics(),
+                onCopy = {},
+                onShare = {},
+            )
+        }
+
+        composeTestRule.onNodeWithText("Recovered Diagnostics Available").assertIsDisplayed()
+        composeTestRule.onNodeWithText("ended unexpectedly", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun recoveredDiagnosticsToggleUpdatesPreview() {
+        composeTestRule.setContent {
+            BugReportPreviewScreen(
+                diagnostics = FakeDiagnostics(),
+                onCopy = {},
+                onShare = {},
+            )
+        }
+
+        composeTestRule.onNodeWithText("Recovered Diagnostics From Previous Launch").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Include recovered diagnostics").performClick()
+        composeTestRule.onNodeWithText("Recovered Diagnostics From Previous Launch").assertDoesNotExist()
     }
 }
